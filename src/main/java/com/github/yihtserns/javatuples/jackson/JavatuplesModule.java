@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.javatuples.Decade;
 import org.javatuples.Pair;
 import org.javatuples.Tuple;
 import org.javatuples.Unit;
@@ -47,6 +48,7 @@ public class JavatuplesModule extends SimpleModule {
     public JavatuplesModule() {
         addForTuple(Unit.class, Unit::fromCollection);
         addForTuple(Pair.class, Pair::fromCollection);
+        addForTuple(Decade.class, Decade::fromCollection);
     }
 
     private <T extends Tuple> void addForTuple(Class<T> tupleType, Function<Collection<?>, T> collectionToTuple) {

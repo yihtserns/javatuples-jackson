@@ -3,11 +3,15 @@ package com.github.yihtserns.javatuples.jackson
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import org.javatuples.Decade
 import org.javatuples.Pair
 import org.javatuples.Unit
 import spock.lang.Specification
 
+import java.time.DayOfWeek
 import java.time.Month
+import java.time.Year
+import java.time.ZoneId
 
 class JavatuplesModuleSpecification extends Specification {
 
@@ -47,6 +51,20 @@ class JavatuplesModuleSpecification extends Specification {
         "pairWildcardEnum" | [true, Month.FEBRUARY.name()]                     | Pair.with(true, Month.FEBRUARY)
         "pairWildcardEnum" | [Month.JANUARY.name(), Month.FEBRUARY.name()]     | Pair.with(Month.JANUARY.name(), Month.FEBRUARY)
         "pairUntyped"      | [1, 2]                                            | Pair.with(1, 2)
+    }
+
+    def "can de/serialize json to/from Decade"() {
+        given:
+        def json = toJson([decadeDateTime: [2022, Month.OCTOBER.name(), 27, DayOfWeek.THURSDAY.name(), 10, 32, 31.401, -3, 0.5, "America/St_Johns"]])
+
+        when:
+        def wrapper = objectMapper.readValue(json, Wrapper)
+
+        then:
+        wrapper.decadeDateTime.equals Decade.with(Year.of(2022), Month.OCTOBER, 27, DayOfWeek.THURSDAY, 10, 32, 31.401d, -3, 0.5f, ZoneId.of("America/St_Johns"))
+
+        then:
+        objectMapper.writeValueAsString(wrapper) == json
     }
 
     def "should throw when trying to deserialize invalid json to tuple"() {
@@ -99,5 +117,7 @@ class JavatuplesModuleSpecification extends Specification {
         Pair<Integer, Month> pairIntegerEnum
         Pair<?, Month> pairWildcardEnum
         Pair pairUntyped
+
+        Decade<Year, Month, Integer, DayOfWeek, Integer, Integer, Double, Integer, Float, ZoneId> decadeDateTime
     }
 }

@@ -62,6 +62,12 @@
             <version>2.2-groovy-3.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.13.1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
