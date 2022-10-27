@@ -44,10 +44,10 @@ public class JavatuplesModule extends SimpleModule {
 
     public JavatuplesModule() {
         addDeserializer(Unit.class, new TupleDeserializer<>(Unit.class, Unit::fromCollection));
-        addSerializer(Unit.class, new UnitSerializer());
+        addSerializer(Unit.class, new TupleSerializer<>(Unit.class));
 
         addDeserializer(Pair.class, new TupleDeserializer<>(Pair.class, Pair::fromCollection));
-        addSerializer(Pair.class, new PairSerializer());
+        addSerializer(Pair.class, new TupleSerializer<>(Pair.class));
     }
 
     private static class TupleDeserializer<T extends Tuple> extends StdDeserializer<T> implements ContextualDeserializer {
@@ -100,31 +100,17 @@ public class JavatuplesModule extends SimpleModule {
         }
     }
 
-    private static class UnitSerializer extends StdSerializer<Unit> {
+    private static class TupleSerializer<T extends Tuple> extends StdSerializer<T> {
 
-        public UnitSerializer() {
-            super(Unit.class, false);
+        protected TupleSerializer(Class<T> tupleType) {
+            super(tupleType);
         }
 
         @Override
-        public void serialize(Unit unit, JsonGenerator generator, SerializerProvider provider) throws IOException {
+        public void serialize(T tuple, JsonGenerator generator, SerializerProvider provider) throws IOException {
             JsonSerializer<Object> listSerializer = provider.findValueSerializer(List.class);
 
-            listSerializer.serialize(unit.toList(), generator, provider);
-        }
-    }
-
-    private static class PairSerializer extends StdSerializer<Pair> {
-
-        protected PairSerializer() {
-            super(Pair.class);
-        }
-
-        @Override
-        public void serialize(Pair pair, JsonGenerator generator, SerializerProvider provider) throws IOException {
-            JsonSerializer<Object> listSerializer = provider.findValueSerializer(List.class);
-
-            listSerializer.serialize(pair.toList(), generator, provider);
+            listSerializer.serialize(tuple.toList(), generator, provider);
         }
     }
 }
