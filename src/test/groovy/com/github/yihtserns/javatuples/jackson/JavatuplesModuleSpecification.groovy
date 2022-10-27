@@ -1,6 +1,7 @@
 package com.github.yihtserns.javatuples.jackson
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import org.javatuples.Decade
@@ -33,7 +34,7 @@ class JavatuplesModuleSpecification extends Specification {
 
     private def objectMapper = new ObjectMapper().findAndRegisterModules()
 
-    def "can de/serialize json to/from tuple"() {
+    def "can de/serialize JSON to/from Tuple bean property"() {
         given:
         def json = toJson([(property): jsonValue])
 
@@ -76,6 +77,25 @@ class JavatuplesModuleSpecification extends Specification {
         "octetIpAddress"   | [0xFE80, 0x0000, 0x0000, 0x0000, 0x0123, 0x4567, 0x89AB, 0xCDEF]                         | Octet.with(0xFE80, 0x0000, 0x0000, 0x0000, 0x0123, 0x4567, 0x89AB, 0xCDEF)
         "enneadLetters"    | ["一", "二", "三", "四", "五", "六", "七", "八", "九"]                                   | Ennead.with("一", "二", "三", "四", "五", "六", "七", "八", "九")
         "decadeDateTime"   | [2022, OCTOBER.name(), 27, THURSDAY.name(), 10, 32, 31.401, -3, 0.5, "America/St_Johns"] | Decade.with(Year.of(2022), OCTOBER, 27, THURSDAY, 10, 32, 31.401d, -3, 0.5f, ZoneId.of("America/St_Johns"))
+    }
+
+    def "can de/serialize JSON to/from Tuple directly"() {
+        given:
+        def quintetCronType = new TypeReference<Quintet<Integer, Integer, Integer, Month, DayOfWeek>>() {}
+
+        when:
+        def validJson = toJson([31, 32, 10, OCTOBER.name(), THURSDAY.name()])
+        def quintetCron = objectMapper.readValue(validJson, quintetCronType)
+
+        then:
+        quintetCron.equals Quintet.with(31, 32, 10, OCTOBER, THURSDAY)
+
+        when:
+        def invalidJson = toJson([31, 32, 10])
+        objectMapper.readValue(invalidJson, quintetCronType)
+
+        then:
+        thrown(MismatchedInputException)
     }
 
     def "should throw when trying to deserialize invalid json to tuple"() {
