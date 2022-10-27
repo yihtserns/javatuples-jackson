@@ -43,11 +43,13 @@ import java.util.function.Function;
 public class JavatuplesModule extends SimpleModule {
 
     public JavatuplesModule() {
-        addDeserializer(Unit.class, new TupleDeserializer<>(Unit.class, Unit::fromCollection));
-        addSerializer(Unit.class, new TupleSerializer<>(Unit.class));
+        addForTuple(Unit.class, Unit::fromCollection);
+        addForTuple(Pair.class, Pair::fromCollection);
+    }
 
-        addDeserializer(Pair.class, new TupleDeserializer<>(Pair.class, Pair::fromCollection));
-        addSerializer(Pair.class, new TupleSerializer<>(Pair.class));
+    private <T extends Tuple> void addForTuple(Class<T> tupleType, Function<Collection<?>, T> collectionToTuple) {
+        addDeserializer(tupleType, new TupleDeserializer<>(tupleType, collectionToTuple));
+        addSerializer(tupleType, new TupleSerializer<>(tupleType));
     }
 
     private static class TupleDeserializer<T extends Tuple> extends StdDeserializer<T> implements ContextualDeserializer {
