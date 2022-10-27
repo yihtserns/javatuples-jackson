@@ -21,13 +21,13 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.javatuples.Pair;
 import org.javatuples.Unit;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 public class JavatuplesModule extends SimpleModule {
@@ -49,6 +49,13 @@ public class JavatuplesModule extends SimpleModule {
         @Override
         public Unit<?> deserialize(JsonParser parser, DeserializationContext context) throws IOException {
             List<?> list = parser.readValueAs(List.class);
+            if (list.size() != 1) {
+                throw new InvalidFormatException(
+                        parser,
+                        "Expected JSON array with 1 entry, but was: " + list,
+                        list,
+                        Unit.class);
+            }
 
             return Unit.with(list.get(0));
         }
@@ -77,6 +84,13 @@ public class JavatuplesModule extends SimpleModule {
         @Override
         public Pair<?, ?> deserialize(JsonParser parser, DeserializationContext context) throws IOException {
             List<?> list = parser.readValueAs(List.class);
+            if (list.size() != 2) {
+                throw new InvalidFormatException(
+                        parser,
+                        "Expected JSON array with 1 entry, but was: " + list,
+                        list,
+                        Unit.class);
+            }
 
             return Pair.with(list.get(0), list.get(1));
         }
