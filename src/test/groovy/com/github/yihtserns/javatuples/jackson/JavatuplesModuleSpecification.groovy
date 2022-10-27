@@ -41,6 +41,7 @@ class JavatuplesModuleSpecification extends Specification {
                 [],
                 1,
                 true,
+                ["a"],
                 [a: 1]
         ]
     }
@@ -76,6 +77,9 @@ class JavatuplesModuleSpecification extends Specification {
                 [],
                 1,
                 true,
+                [1, "b"],
+                ["a", 2],
+                ["a", "b"],
                 [a: 1]
         ]
     }
