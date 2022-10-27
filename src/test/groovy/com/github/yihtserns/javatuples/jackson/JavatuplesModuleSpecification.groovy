@@ -11,23 +11,28 @@ class JavatuplesModuleSpecification extends Specification {
 
     private def objectMapper = new ObjectMapper().findAndRegisterModules()
 
-    def "can de/serialize Unit"() {
+    def "can de/serialize json to/from tuple"() {
         given:
-        def json = toJson([unitInteger: [1]])
+        def json = toJson([(property): jsonValue])
 
         when:
         def wrapper = objectMapper.readValue(json, Wrapper)
 
         then:
-        wrapper.unitInteger.toList() == [1]
+        wrapper[property].toList() == expectedJavaValue
 
         then:
         objectMapper.writeValueAsString(wrapper) == json
+
+        where:
+        property      | jsonValue | expectedJavaValue
+        "unitInteger" | [1]       | [1]
+        "pairInteger" | [1, 2]    | [1, 2]
     }
 
-    def "should throw when trying to deserialize invalid Unit"() {
+    def "should throw when trying to deserialize invalid json to tuple"() {
         given:
-        def json = toJson([unitInteger: invalidValue])
+        def json = toJson([(property): invalidValue])
 
         when:
         objectMapper.readValue(json, Wrapper)
@@ -36,52 +41,23 @@ class JavatuplesModuleSpecification extends Specification {
         thrown(MismatchedInputException)
 
         where:
-        invalidValue << [
-                [1, 2],
-                [],
-                1,
-                true,
-                ["a"],
-                [a: 1]
-        ]
-    }
+        property      | invalidValue
+        "unitInteger" | [1, 2]
+        "unitInteger" | []
+        "unitInteger" | 1
+        "unitInteger" | true
+        "unitInteger" | ["a"]
+        "unitInteger" | [a: 1]
 
-    def "can de/serialize Pair"() {
-        given:
-        def json = toJson([pairInteger: [1, 2]])
-
-        when:
-        def wrapper = objectMapper.readValue(json, Wrapper)
-
-        then:
-        wrapper.pairInteger.toList() == [1, 2]
-
-        then:
-        objectMapper.writeValueAsString(wrapper) == json
-    }
-
-    def "should throw when trying to deserialize invalid Pair"() {
-        given:
-        def json = toJson([pairInteger: invalidValue])
-
-        when:
-        objectMapper.readValue(json, Wrapper)
-
-        then:
-        thrown(MismatchedInputException)
-
-        where:
-        invalidValue << [
-                [1, 2, 3],
-                [1],
-                [],
-                1,
-                true,
-                [1, "b"],
-                ["a", 2],
-                ["a", "b"],
-                [a: 1]
-        ]
+        "pairInteger" | [1, 2, 3]
+        "pairInteger" | [1]
+        "pairInteger" | []
+        "pairInteger" | 1
+        "pairInteger" | true
+        "pairInteger" | [1, "b"]
+        "pairInteger" | ["a", 2]
+        "pairInteger" | ["a", "b"]
+        "pairInteger" | [a: 1]
     }
 
     private String toJson(Object obj) {
