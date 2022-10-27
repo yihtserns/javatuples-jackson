@@ -31,7 +31,14 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.javatuples.Decade;
+import org.javatuples.Ennead;
+import org.javatuples.Octet;
 import org.javatuples.Pair;
+import org.javatuples.Quartet;
+import org.javatuples.Quintet;
+import org.javatuples.Septet;
+import org.javatuples.Sextet;
+import org.javatuples.Triplet;
 import org.javatuples.Tuple;
 import org.javatuples.Unit;
 
@@ -48,6 +55,13 @@ public class JavatuplesModule extends SimpleModule {
     public JavatuplesModule() {
         addForTuple(Unit.class, Unit::fromCollection);
         addForTuple(Pair.class, Pair::fromCollection);
+        addForTuple(Triplet.class, Triplet::fromCollection);
+        addForTuple(Quartet.class, Quartet::fromCollection);
+        addForTuple(Quintet.class, Quintet::fromCollection);
+        addForTuple(Sextet.class, Sextet::fromCollection);
+        addForTuple(Septet.class, Septet::fromCollection);
+        addForTuple(Octet.class, Octet::fromCollection);
+        addForTuple(Ennead.class, Ennead::fromCollection);
         addForTuple(Decade.class, Decade::fromCollection);
     }
 

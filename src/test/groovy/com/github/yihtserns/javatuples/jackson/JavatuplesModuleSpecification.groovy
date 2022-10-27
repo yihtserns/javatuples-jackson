@@ -4,7 +4,14 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import org.javatuples.Decade
+import org.javatuples.Ennead
+import org.javatuples.Octet
 import org.javatuples.Pair
+import org.javatuples.Quartet
+import org.javatuples.Quintet
+import org.javatuples.Septet
+import org.javatuples.Sextet
+import org.javatuples.Triplet
 import org.javatuples.Unit
 import spock.lang.Specification
 
@@ -12,6 +19,15 @@ import java.time.DayOfWeek
 import java.time.Month
 import java.time.Year
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
+
+import static java.time.DayOfWeek.THURSDAY
+import static java.time.Month.FEBRUARY
+import static java.time.Month.JANUARY
+import static java.time.Month.OCTOBER
+import static java.time.temporal.ChronoUnit.DAYS
+import static java.time.temporal.ChronoUnit.HOURS
+import static java.time.temporal.ChronoUnit.MINUTES
 
 class JavatuplesModuleSpecification extends Specification {
 
@@ -31,40 +47,35 @@ class JavatuplesModuleSpecification extends Specification {
         objectMapper.writeValueAsString(wrapper) == json
 
         where:
-        property           | jsonValue                                         | expectedJavaValue
-        "unitInteger"      | [1]                                               | Unit.with(1)
-        "unitWildcard"     | [1]                                               | Unit.with(1)
-        "unitWildcard"     | [1.1d]                                            | Unit.with(1.1d)
-        "unitWildcard"     | ["1.1"]                                           | Unit.with("1.1")
-        "unitWildcard"     | [true]                                            | Unit.with(true)
-        "unitWildcard"     | [Month.JANUARY.name()]                            | Unit.with(Month.JANUARY.name())
-        "unitUntyped"      | [1]                                               | Unit.with(1)
-        "unitEnum"         | [Month.JANUARY.name()]                            | Unit.with(Month.JANUARY)
-        "unitEnumNested"   | [[Month.JANUARY.name()]]                          | Unit.with(Unit.<Month> with(Month.JANUARY))
-        "unitEnumList"     | [[Month.JANUARY.name()], [Month.FEBRUARY.name()]] | [Unit.with(Month.JANUARY), Unit.with(Month.FEBRUARY)]
+        property           | jsonValue                                                                                | expectedJavaValue
+        "unitInteger"      | [1]                                                                                      | Unit.with(1)
+        "unitWildcard"     | [1]                                                                                      | Unit.with(1)
+        "unitWildcard"     | [1.1]                                                                                    | Unit.with(1.1d)
+        "unitWildcard"     | ["1.1"]                                                                                  | Unit.with("1.1")
+        "unitWildcard"     | [true]                                                                                   | Unit.with(true)
+        "unitWildcard"     | [JANUARY.name()]                                                                         | Unit.with(JANUARY.name())
+        "unitUntyped"      | [1]                                                                                      | Unit.with(1)
+        "unitEnum"         | [JANUARY.name()]                                                                         | Unit.with(JANUARY)
+        "unitEnumNested"   | [[JANUARY.name()]]                                                                       | Unit.with(Unit.<Month> with(JANUARY))
+        "unitEnumList"     | [[JANUARY.name()], [FEBRUARY.name()]]                                                    | [Unit.with(JANUARY), Unit.with(FEBRUARY)]
 
-        "pairInteger"      | [1, 2]                                            | Pair.with(1, 2)
-        "pairIntegerEnum"  | [1, Month.FEBRUARY.name()]                        | Pair.with(1, Month.FEBRUARY)
-        "pairWildcardEnum" | [1, Month.FEBRUARY.name()]                        | Pair.with(1, Month.FEBRUARY)
-        "pairWildcardEnum" | [1.1d, Month.FEBRUARY.name()]                     | Pair.with(1.1d, Month.FEBRUARY)
-        "pairWildcardEnum" | ["1.1", Month.FEBRUARY.name()]                    | Pair.with("1.1", Month.FEBRUARY)
-        "pairWildcardEnum" | [true, Month.FEBRUARY.name()]                     | Pair.with(true, Month.FEBRUARY)
-        "pairWildcardEnum" | [Month.JANUARY.name(), Month.FEBRUARY.name()]     | Pair.with(Month.JANUARY.name(), Month.FEBRUARY)
-        "pairUntyped"      | [1, 2]                                            | Pair.with(1, 2)
-    }
+        "pairInteger"      | [1, 2]                                                                                   | Pair.with(1, 2)
+        "pairIntegerEnum"  | [1, FEBRUARY.name()]                                                                     | Pair.with(1, FEBRUARY)
+        "pairWildcardEnum" | [1, FEBRUARY.name()]                                                                     | Pair.with(1, FEBRUARY)
+        "pairWildcardEnum" | [1.1, FEBRUARY.name()]                                                                   | Pair.with(1.1d, FEBRUARY)
+        "pairWildcardEnum" | ["1.1", FEBRUARY.name()]                                                                 | Pair.with("1.1", FEBRUARY)
+        "pairWildcardEnum" | [true, FEBRUARY.name()]                                                                  | Pair.with(true, FEBRUARY)
+        "pairWildcardEnum" | [JANUARY.name(), FEBRUARY.name()]                                                        | Pair.with(JANUARY.name(), FEBRUARY)
+        "pairUntyped"      | [1, 2]                                                                                   | Pair.with(1, 2)
 
-    def "can de/serialize json to/from Decade"() {
-        given:
-        def json = toJson([decadeDateTime: [2022, Month.OCTOBER.name(), 27, DayOfWeek.THURSDAY.name(), 10, 32, 31.401, -3, 0.5, "America/St_Johns"]])
-
-        when:
-        def wrapper = objectMapper.readValue(json, Wrapper)
-
-        then:
-        wrapper.decadeDateTime.equals Decade.with(Year.of(2022), Month.OCTOBER, 27, DayOfWeek.THURSDAY, 10, 32, 31.401d, -3, 0.5f, ZoneId.of("America/St_Johns"))
-
-        then:
-        objectMapper.writeValueAsString(wrapper) == json
+        "tripletDate"      | [27, OCTOBER.name(), 2022]                                                               | Triplet.with(27, OCTOBER, 2022)
+        "quartetTime"      | [10, 32, 31.0, 0.401]                                                                    | Quartet.with(10, 32, 31f, 0.401)
+        "quintetCron"      | [31, 32, 10, OCTOBER.name(), THURSDAY.name()]                                            | Quintet.with(31, 32, 10, OCTOBER, THURSDAY)
+        "sextetChrono"     | [31, MINUTES.name(), 32, HOURS.name(), 10, DAYS.name()]                                  | Sextet.with(31, MINUTES, 32, HOURS, 10, DAYS)
+        "septetAddress"    | ["Multimedia", "University", "Persiaran", "Multimedia", 63100, "Cyberjaya", "Malaysia"]  | Septet.with("Multimedia", "University", "Persiaran", "Multimedia", 63100, "Cyberjaya", "Malaysia")
+        "octetIpAddress"   | [0xFE80, 0x0000, 0x0000, 0x0000, 0x0123, 0x4567, 0x89AB, 0xCDEF]                         | Octet.with(0xFE80, 0x0000, 0x0000, 0x0000, 0x0123, 0x4567, 0x89AB, 0xCDEF)
+        "enneadLetters"    | ["一", "二", "三", "四", "五", "六", "七", "八", "九"]                                   | Ennead.with("一", "二", "三", "四", "五", "六", "七", "八", "九")
+        "decadeDateTime"   | [2022, OCTOBER.name(), 27, THURSDAY.name(), 10, 32, 31.401, -3, 0.5, "America/St_Johns"] | Decade.with(Year.of(2022), OCTOBER, 27, THURSDAY, 10, 32, 31.401d, -3, 0.5f, ZoneId.of("America/St_Johns"))
     }
 
     def "should throw when trying to deserialize invalid json to tuple"() {
@@ -118,6 +129,13 @@ class JavatuplesModuleSpecification extends Specification {
         Pair<?, Month> pairWildcardEnum
         Pair pairUntyped
 
+        Triplet<Integer, Month, Integer> tripletDate
+        Quartet<Integer, Integer, Float, BigDecimal> quartetTime
+        Quintet<Integer, Integer, Integer, Month, DayOfWeek> quintetCron
+        Sextet<Integer, ChronoUnit, Integer, ChronoUnit, Integer, ChronoUnit> sextetChrono
+        Septet<String, String, String, String, Integer, String, String> septetAddress
+        Octet<Integer, Integer, Integer, Integer, Integer, Integer, Integer, Integer> octetIpAddress
+        Ennead<String, String, String, String, String, String, String, String, String> enneadLetters
         Decade<Year, Month, Integer, DayOfWeek, Integer, Integer, Double, Integer, Float, ZoneId> decadeDateTime
     }
 }
