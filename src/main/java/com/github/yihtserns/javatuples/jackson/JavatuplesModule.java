@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
@@ -30,57 +31,72 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.javatuples.Pair;
+import org.javatuples.Tuple;
 import org.javatuples.Unit;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 public class JavatuplesModule extends SimpleModule {
 
     public JavatuplesModule() {
-        addDeserializer(Unit.class, new UnitDeserializer());
+        addDeserializer(Unit.class, new TupleDeserializer<>(Unit.class, Unit::fromCollection));
         addSerializer(Unit.class, new UnitSerializer());
 
-        addDeserializer(Pair.class, new PairDeserializer());
+        addDeserializer(Pair.class, new TupleDeserializer<>(Pair.class, Pair::fromCollection));
         addSerializer(Pair.class, new PairSerializer());
     }
 
-    private static class UnitDeserializer extends StdDeserializer<Unit<?>> implements ContextualDeserializer {
+    private static class TupleDeserializer<T extends Tuple> extends StdDeserializer<T> implements ContextualDeserializer {
 
-        private JavaType entryType;
+        private final Function<Collection<?>, T> collectionToTuple;
+        private final List<JavaType> entryTypes;
 
-        public UnitDeserializer() {
-            this(null);
+        public TupleDeserializer(Class<T> tupleType, Function<Collection<?>, T> collectionToTuple) {
+            this(tupleType, collectionToTuple, null);
         }
 
-        private UnitDeserializer(JavaType entryType) {
-            super(Unit.class);
-            this.entryType = entryType;
+        public TupleDeserializer(Class<T> tupleType, Function<Collection<?>, T> collectionToTuple, List<JavaType> entryTypes) {
+            super(tupleType);
+            this.collectionToTuple = collectionToTuple;
+            this.entryTypes = entryTypes;
         }
 
         @Override
-        public Unit<?> deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+        public T deserialize(JsonParser parser, DeserializationContext context) throws IOException {
             if (!parser.isExpectedStartArrayToken()) {
-                return (Unit) context.handleUnexpectedToken(Unit.class, parser);
+                return (T) context.handleUnexpectedToken(handledType(), parser);
             }
 
             ArrayNode arrayNode = parser.readValueAsTree();
-            if (arrayNode.size() != 1) {
+            if (arrayNode.size() != entryTypes.size()) {
                 throw new InvalidFormatException(
                         parser,
-                        "Expected JSON array of size 1, but was: " + arrayNode,
+                        String.format("Expected JSON array of size %s, but was: %s", entryTypes.size(), arrayNode),
                         arrayNode,
-                        Unit.class);
+                        handledType());
             }
 
-            return Unit.with(context.readTreeAsValue(arrayNode.get(0), entryType));
+            List<?> entries = new ArrayList<>();
+            for (int i = 0; i < arrayNode.size(); i++) {
+                JsonNode jsonNode = arrayNode.get(i);
+                JavaType entryType = entryTypes.get(i);
+
+                entries.add(context.readTreeAsValue(jsonNode, entryType));
+            }
+
+            return collectionToTuple.apply(entries);
         }
 
         @Override
         public JsonDeserializer<?> createContextual(DeserializationContext context, BeanProperty property) {
-            List<JavaType> entryTypes = context.getContextualType().getBindings().getTypeParameters();
-
-            return new UnitDeserializer(entryTypes.get(0));
+            return new TupleDeserializer<>(
+                    (Class<T>) handledType(),
+                    collectionToTuple,
+                    context.getContextualType().getBindings().getTypeParameters());
         }
     }
 
@@ -95,45 +111,6 @@ public class JavatuplesModule extends SimpleModule {
             JsonSerializer<Object> listSerializer = provider.findValueSerializer(List.class);
 
             listSerializer.serialize(unit.toList(), generator, provider);
-        }
-    }
-
-    private static class PairDeserializer extends StdDeserializer<Pair<?, ?>> implements ContextualDeserializer {
-
-        private List<JavaType> entryTypes;
-
-        public PairDeserializer() {
-            this(null);
-        }
-
-        public PairDeserializer(List<JavaType> entryTypes) {
-            super(Pair.class);
-            this.entryTypes = entryTypes;
-        }
-
-        @Override
-        public Pair<?, ?> deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-            if (!parser.isExpectedStartArrayToken()) {
-                return (Pair) context.handleUnexpectedToken(Pair.class, parser);
-            }
-
-            ArrayNode arrayNode = parser.readValueAsTree();
-            if (arrayNode.size() != 2) {
-                throw new InvalidFormatException(
-                        parser,
-                        "Expected JSON array of size 2, but was: " + arrayNode,
-                        arrayNode,
-                        Pair.class);
-            }
-
-            return Pair.with(
-                    context.readTreeAsValue(arrayNode.get(0), entryTypes.get(0)),
-                    context.readTreeAsValue(arrayNode.get(1), entryTypes.get(1)));
-        }
-
-        @Override
-        public JsonDeserializer<?> createContextual(DeserializationContext context, BeanProperty property) {
-            return new PairDeserializer(context.getContextualType().getBindings().getTypeParameters());
         }
     }
 
