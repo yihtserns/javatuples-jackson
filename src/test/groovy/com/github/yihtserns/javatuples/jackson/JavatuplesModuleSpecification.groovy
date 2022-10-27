@@ -21,18 +21,25 @@ class JavatuplesModuleSpecification extends Specification {
         def wrapper = objectMapper.readValue(json, Wrapper)
 
         then:
-        wrapper[property].toList() == expectedJavaValue
+        wrapper[property] == expectedJavaValue
 
         then:
         objectMapper.writeValueAsString(wrapper) == json
 
         where:
-        property          | jsonValue                  | expectedJavaValue
-        "unitInteger"     | [1]                        | [1]
-        "unitEnum"        | [Month.JANUARY.name()]     | [Month.JANUARY]
+        property          | jsonValue                                         | expectedJavaValue
+        "unitInteger"     | [1]                                               | Unit.with(1)
+        "unitWildcard"    | [1]                                               | Unit.with(1)
+        "unitWildcard"    | [1.1d]                                            | Unit.with(1.1d)
+        "unitWildcard"    | ["1.1"]                                           | Unit.with("1.1")
+        "unitWildcard"    | [true]                                            | Unit.with(true)
+        "unitWildcard"    | [Month.JANUARY.name()]                            | Unit.with(Month.JANUARY.name())
+        "unitEnum"        | [Month.JANUARY.name()]                            | Unit.with(Month.JANUARY)
+        "unitEnumNested"  | [[Month.JANUARY.name()]]                          | Unit.with(Unit.<Month> with(Month.JANUARY))
+        "unitEnumList"    | [[Month.JANUARY.name()], [Month.FEBRUARY.name()]] | [Unit.with(Month.JANUARY), Unit.with(Month.FEBRUARY)]
 
-        "pairInteger"     | [1, 2]                     | [1, 2]
-        "pairIntegerEnum" | [1, Month.FEBRUARY.name()] | [1, Month.FEBRUARY]
+        "pairInteger"     | [1, 2]                                            | Pair.with(1, 2)
+        "pairIntegerEnum" | [1, Month.FEBRUARY.name()]                        | Pair.with(1, Month.FEBRUARY)
     }
 
     def "should throw when trying to deserialize invalid json to tuple"() {
@@ -75,7 +82,11 @@ class JavatuplesModuleSpecification extends Specification {
     static class Wrapper {
 
         Unit<Integer> unitInteger
+        Unit<?> unitWildcard
         Unit<Month> unitEnum
+        Unit<Unit<Month>> unitEnumNested
+        List<Unit<Month>> unitEnumList
+
         Pair<Integer, Integer> pairInteger
         Pair<Integer, Month> pairIntegerEnum
     }
