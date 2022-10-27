@@ -1,6 +1,8 @@
 package com.github.yihtserns.javatuples.jackson
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.javatuples.Pair
 import org.javatuples.Unit
 import spock.lang.Specification
 
@@ -16,7 +18,21 @@ class JavatuplesModuleSpecification extends Specification {
         def wrapper = objectMapper.readValue(json, Wrapper)
 
         then:
-        wrapper.unitInteger.value0 == 1
+        wrapper.unitInteger.toList() == [1]
+
+        then:
+        objectMapper.writeValueAsString(wrapper) == json
+    }
+
+    def "can de/serialize Pair"() {
+        given:
+        def json = toJson([pairInteger: [1, 2]])
+
+        when:
+        def wrapper = objectMapper.readValue(json, Wrapper)
+
+        then:
+        wrapper.pairInteger.toList() == [1, 2]
 
         then:
         objectMapper.writeValueAsString(wrapper) == json
@@ -26,8 +42,10 @@ class JavatuplesModuleSpecification extends Specification {
         return objectMapper.writeValueAsString(obj)
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     static class Wrapper {
 
         Unit<Integer> unitInteger
+        Pair<Integer, Integer> pairInteger
     }
 }

@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.javatuples.Pair;
 import org.javatuples.Unit;
 
 import java.io.IOException;
@@ -34,6 +35,9 @@ public class JavatuplesModule extends SimpleModule {
     public JavatuplesModule() {
         addDeserializer(Unit.class, new UnitDeserializer());
         addSerializer(Unit.class, new UnitSerializer());
+
+        addDeserializer(Pair.class, new PairDeserializer());
+        addSerializer(Pair.class, new PairSerializer());
     }
 
     private static class UnitDeserializer extends StdDeserializer<Unit<?>> {
@@ -60,10 +64,35 @@ public class JavatuplesModule extends SimpleModule {
         public void serialize(Unit unit, JsonGenerator generator, SerializerProvider provider) throws IOException {
             JsonSerializer<Object> listSerializer = provider.findValueSerializer(List.class);
 
-            listSerializer.serialize(
-                    Collections.singletonList(unit.getValue0()),
-                    generator,
-                    provider);
+            listSerializer.serialize(unit.toList(), generator, provider);
+        }
+    }
+
+    private static class PairDeserializer extends StdDeserializer<Pair<?, ?>> {
+
+        public PairDeserializer() {
+            super(Pair.class);
+        }
+
+        @Override
+        public Pair<?, ?> deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+            List<?> list = parser.readValueAs(List.class);
+
+            return Pair.with(list.get(0), list.get(1));
+        }
+    }
+
+    private static class PairSerializer extends StdSerializer<Pair> {
+
+        protected PairSerializer() {
+            super(Pair.class);
+        }
+
+        @Override
+        public void serialize(Pair pair, JsonGenerator generator, SerializerProvider provider) throws IOException {
+            JsonSerializer<Object> listSerializer = provider.findValueSerializer(List.class);
+
+            listSerializer.serialize(pair.toList(), generator, provider);
         }
     }
 }
