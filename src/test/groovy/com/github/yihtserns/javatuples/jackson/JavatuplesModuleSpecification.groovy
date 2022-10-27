@@ -34,6 +34,7 @@ class JavatuplesModuleSpecification extends Specification {
         "unitWildcard"     | ["1.1"]                                           | Unit.with("1.1")
         "unitWildcard"     | [true]                                            | Unit.with(true)
         "unitWildcard"     | [Month.JANUARY.name()]                            | Unit.with(Month.JANUARY.name())
+        "unitUntyped"      | [1]                                               | Unit.with(1)
         "unitEnum"         | [Month.JANUARY.name()]                            | Unit.with(Month.JANUARY)
         "unitEnumNested"   | [[Month.JANUARY.name()]]                          | Unit.with(Unit.<Month> with(Month.JANUARY))
         "unitEnumList"     | [[Month.JANUARY.name()], [Month.FEBRUARY.name()]] | [Unit.with(Month.JANUARY), Unit.with(Month.FEBRUARY)]
@@ -45,6 +46,7 @@ class JavatuplesModuleSpecification extends Specification {
         "pairWildcardEnum" | ["1.1", Month.FEBRUARY.name()]                    | Pair.with("1.1", Month.FEBRUARY)
         "pairWildcardEnum" | [true, Month.FEBRUARY.name()]                     | Pair.with(true, Month.FEBRUARY)
         "pairWildcardEnum" | [Month.JANUARY.name(), Month.FEBRUARY.name()]     | Pair.with(Month.JANUARY.name(), Month.FEBRUARY)
+        "pairUntyped"      | [1, 2]                                            | Pair.with(1, 2)
     }
 
     def "should throw when trying to deserialize invalid json to tuple"() {
@@ -88,6 +90,7 @@ class JavatuplesModuleSpecification extends Specification {
 
         Unit<Integer> unitInteger
         Unit<?> unitWildcard
+        Unit unitUntyped
         Unit<Month> unitEnum
         Unit<Unit<Month>> unitEnumNested
         List<Unit<Month>> unitEnumList
@@ -95,5 +98,6 @@ class JavatuplesModuleSpecification extends Specification {
         Pair<Integer, Integer> pairInteger
         Pair<Integer, Month> pairIntegerEnum
         Pair<?, Month> pairWildcardEnum
+        Pair pairUntyped
     }
 }

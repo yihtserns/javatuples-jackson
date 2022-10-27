@@ -36,9 +36,11 @@ import org.javatuples.Unit;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class JavatuplesModule extends SimpleModule {
 
@@ -95,10 +97,14 @@ public class JavatuplesModule extends SimpleModule {
 
         @Override
         public JsonDeserializer<?> createContextual(DeserializationContext context, BeanProperty property) {
-            return new TupleDeserializer<>(
-                    (Class<T>) handledType(),
-                    collectionToTuple,
-                    context.getContextualType().getBindings().getTypeParameters());
+            List<JavaType> entryTypes = context.getContextualType().getBindings().getTypeParameters();
+            if (entryTypes.isEmpty()) {
+                entryTypes = Arrays.stream(handledType().getTypeParameters())
+                        .map(type -> context.getTypeFactory().constructType(type))
+                        .collect(Collectors.toList());
+            }
+
+            return new TupleDeserializer<>((Class<T>) handledType(), collectionToTuple, entryTypes);
         }
     }
 
