@@ -25,7 +25,7 @@ class JavatuplesModuleSpecification extends Specification {
         def wrapper = objectMapper.readValue(json, Wrapper)
 
         then:
-        wrapper[property] == expectedJavaValue
+        wrapper[property].equals expectedJavaValue
 
         then:
         objectMapper.writeValueAsString(wrapper) == json
