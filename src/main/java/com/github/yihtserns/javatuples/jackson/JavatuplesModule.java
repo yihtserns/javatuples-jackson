@@ -53,21 +53,22 @@ import java.util.stream.Collectors;
 public class JavatuplesModule extends SimpleModule {
 
     public JavatuplesModule() {
-        addForTuple(Unit.class, Unit::fromCollection);
-        addForTuple(Pair.class, Pair::fromCollection);
-        addForTuple(Triplet.class, Triplet::fromCollection);
-        addForTuple(Quartet.class, Quartet::fromCollection);
-        addForTuple(Quintet.class, Quintet::fromCollection);
-        addForTuple(Sextet.class, Sextet::fromCollection);
-        addForTuple(Septet.class, Septet::fromCollection);
-        addForTuple(Octet.class, Octet::fromCollection);
-        addForTuple(Ennead.class, Ennead::fromCollection);
-        addForTuple(Decade.class, Decade::fromCollection);
+        addDeserializer(Unit.class, Unit::fromCollection);
+        addDeserializer(Pair.class, Pair::fromCollection);
+        addDeserializer(Triplet.class, Triplet::fromCollection);
+        addDeserializer(Quartet.class, Quartet::fromCollection);
+        addDeserializer(Quintet.class, Quintet::fromCollection);
+        addDeserializer(Sextet.class, Sextet::fromCollection);
+        addDeserializer(Septet.class, Septet::fromCollection);
+        addDeserializer(Octet.class, Octet::fromCollection);
+        addDeserializer(Ennead.class, Ennead::fromCollection);
+        addDeserializer(Decade.class, Decade::fromCollection);
+
+        addSerializer(Tuple.class, new TupleSerializer());
     }
 
-    private <T extends Tuple> void addForTuple(Class<T> tupleType, Function<Collection<?>, T> collectionToTuple) {
+    private <T extends Tuple> void addDeserializer(Class<T> tupleType, Function<Collection<?>, T> collectionToTuple) {
         addDeserializer(tupleType, new TupleDeserializer<>(tupleType, collectionToTuple));
-        addSerializer(tupleType, new TupleSerializer<>(tupleType));
     }
 
     private static class TupleDeserializer<T extends Tuple> extends StdDeserializer<T> implements ContextualDeserializer {
@@ -79,7 +80,7 @@ public class JavatuplesModule extends SimpleModule {
             this(tupleType, collectionToTuple, null);
         }
 
-        public TupleDeserializer(Class<T> tupleType, Function<Collection<?>, T> collectionToTuple, List<JavaType> entryTypes) {
+        private TupleDeserializer(Class<T> tupleType, Function<Collection<?>, T> collectionToTuple, List<JavaType> entryTypes) {
             super(tupleType);
             this.collectionToTuple = collectionToTuple;
             this.entryTypes = entryTypes;
@@ -124,14 +125,14 @@ public class JavatuplesModule extends SimpleModule {
         }
     }
 
-    private static class TupleSerializer<T extends Tuple> extends StdSerializer<T> {
+    private static class TupleSerializer extends StdSerializer<Tuple> {
 
-        protected TupleSerializer(Class<T> tupleType) {
-            super(tupleType);
+        public TupleSerializer() {
+            super(Tuple.class, false);
         }
 
         @Override
-        public void serialize(T tuple, JsonGenerator generator, SerializerProvider provider) throws IOException {
+        public void serialize(Tuple tuple, JsonGenerator generator, SerializerProvider provider) throws IOException {
             JsonSerializer<Object> listSerializer = provider.findValueSerializer(List.class);
 
             listSerializer.serialize(tuple.toList(), generator, provider);
